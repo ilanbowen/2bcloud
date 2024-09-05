@@ -1,0 +1,54 @@
+---
+- name: ensure the jenkins apt repository key is installed
+  apt_key: url=https://pkg.jenkins.io/debian/jenkins.io-2023.key state=present
+
+- name: ensure the repository is configured
+  apt_repository: repo='deb https://pkg.jenkins.io/debian-stable binary/' state=present
+
+- name: ensure jenkins is installed
+  apt: name=jenkins update_cache=yes
+
+- name: ensure jenkins is running
+  service: name=jenkins state=started
+
+- name: sleep for 30 seconds and continue with play
+  wait_for: timeout=30
+  delegate_to: localhost
+
+- name: Disable Jenkins setup wizard
+  lineinfile:
+    dest=/etc/default/jenkins
+    regexp=^JAVA_ARGS=
+    line=JAVA_ARGS="-Djava.awt.headless=true -Djenkins.install.runSetupWizard=false"
+
+- name: Create initialization scripts directory
+  file: path=/var/lib/jenkins/init.groovy.d
+        state=directory
+        owner=jenkins
+        group=jenkins
+        mode=0775
+
+- name: Add initialization script to setup basic security
+  template: src=security.groovy.j2
+            dest=/var/lib/jenkins/init.groovy.d/security.groovy
+
+- name: Download CLI jar
+  get_url:
+    url: "http://localhost:8080/jnlpJars/jenkins-cli.jar"
+    dest: /opt/jenkins-cli.jar
+
+- name: restart jenkins
+  service: name=jenkins state=restarted
+
+- name: sleep for 30 seconds and continue with play
+  wait_for: timeout=30
+  delegate_to: localhost
+
+- name: init password jenkins
+  shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+  changed_when: false
+  register: result
+
+- name: print init password jenkins
+  debug:
+    var: result.stdout  

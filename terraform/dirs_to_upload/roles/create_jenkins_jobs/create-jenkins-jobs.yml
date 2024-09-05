@@ -1,0 +1,13 @@
+---
+# This Playbook creates infra in aws cloud
+
+- hosts: localhost
+  gather_facts: False
+  tags: jenkins job creations
+  become: true
+
+  tasks:
+  - include_tasks: tasks/jenkins_cli_create_jobs.yml
+
+
+  

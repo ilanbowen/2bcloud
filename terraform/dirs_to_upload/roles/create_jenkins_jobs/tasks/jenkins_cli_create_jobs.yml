@@ -1,0 +1,25 @@
+---
+- name: init password jenkins
+  shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+  changed_when: false
+  register: result
+
+- name: Jenkins - Create 01_CloneGitRepo Job
+  shell: java -jar /opt/jenkins-cli.jar -s http://localhost:8080/ -auth admin:{{ result.stdout }} create-job 01_CloneGitRepo < /home/adminuser/Jenkins_Jobs/01_CloneGitRepo_Job.xml
+  become: yes
+  become_method: sudo
+
+- name: Jenkins - Create 02_BuildDockerImage Job
+  shell: java -jar /opt/jenkins-cli.jar -s http://localhost:8080/ -auth admin:{{ result.stdout }} create-job 02_BuildDockerImage < /home/adminuser/Jenkins_Jobs/02_BuildDockerImage_Job.xml
+  become: yes
+  become_method: sudo    
+
+- name: Jenkins - Create 03_UploadDockerImageToAcr Job
+  shell: java -jar /opt/jenkins-cli.jar -s http://localhost:8080/ -auth admin:{{ result.stdout }} create-job 03_UploadDockerImageToAcr < /home/adminuser/Jenkins_Jobs/03_UploadDockerImageToAcr_Job.xml
+  become: yes
+  become_method: sudo
+
+- name: Jenkins - Create 04_DeployAppToAks Job
+  shell: java -jar /opt/jenkins-cli.jar -s http://localhost:8080/ -auth admin:{{ result.stdout }} create-job 04_DeployAppToAks < /home/adminuser/Jenkins_Jobs/04_DeployAppToAks_Job.xml
+  become: yes
+  become_method: sudo  

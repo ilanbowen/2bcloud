@@ -1,0 +1,14 @@
+---
+# This Playbook creates infra in aws cloud
+
+- hosts: localhost
+  gather_facts: False
+  tags: jenkins and docker creation
+  become: true
+
+
+  tasks:
+  - include_tasks: tasks/01_installJava17.yml
+  - include_tasks: tasks/02_installJenkins.yml
+  - include_tasks: tasks/03_installDocker.yml
+
