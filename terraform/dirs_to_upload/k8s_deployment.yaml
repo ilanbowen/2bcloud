@@ -1,37 +1,87 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: flask-hello-world
+  name: helloweb
   labels:
-    app: flask-hello-world
+    app: hello
 spec:
-  replicas: 1
   selector:
     matchLabels:
-      app: flask-hello-world
+      app: hello
+      tier: web
   template:
     metadata:
       labels:
-        app: flask-hello-world
+        app: hello
+        tier: web
     spec:
       containers:
-      - name: flask-hello-world
+      - name: hello-app
         image: acrweb2b.azurecr.io/hello_world:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
+        volumeMounts:
+          - name: tls
+            mountPath: /etc/tls
+            readOnly: true
+        env:
+          - name: TLS_CERT
+            value: /etc/tls/tls.crt
+          - name: TLS_KEY
+            value: /etc/tls/tls.key
+      volumes:
+      - name: tls
+        secret:
+          secretName: www-tls
       imagePullSecrets:
       - name: acr-secret
+
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: flask-hello-world-service
+    name: helloweb
+    annotations:
+        service.beta.kubernetes.io/azure-dns-label-name: $AZURE_LOADBALANCER_DNS_LABEL_NAME
 spec:
-  type: LoadBalancer
-  selector:
-    app: flask-hello-world
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 5000
+    selector:
+        app: hello
+        tier: web
+    type: LoadBalancer
+    ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 5000
+
+ 
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: helloweb-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"   # If using cert-manager for SSL certificates
+spec:
+  rules:
+  - host: devopstask.store    # Your domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: helloweb
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - devopstask.store
+    secretName: flask-app-tls

@@ -2,3 +2,6 @@ terraform/.terraform
 terraform/.terraform.lock.hcl
 terraform/terraform.tfvars
 terraform/terraform.tfstate.backup
+terraform/k8s-resources/.terraform
+terraform/k8s-resources/.terraform.lock.hcl
+terraform/k8s-resources/terraform.tfstate.backup

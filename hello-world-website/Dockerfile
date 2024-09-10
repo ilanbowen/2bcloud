@@ -10,7 +10,7 @@ COPY . /app
 # Install Flask
 RUN pip install --no-cache-dir flask
 
-# Make port 5000 available to the world outside this container
+# Make port 8443 available to the world outside this container
 EXPOSE 5000
 
 # Define environment variable
